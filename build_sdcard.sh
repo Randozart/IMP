@@ -1,4 +1,7 @@
 #!/bin/bash
+# IMP SD Card Builder - Builds bootable SD card image for KV260
+#     Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
+#
 # build_sdcard.sh - Build SD card image for KV260 IMP
 # Usage: ./build_sdcard.sh <path-to-sd-card-mount>
 

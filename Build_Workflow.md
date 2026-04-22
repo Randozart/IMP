@@ -1,3 +1,8 @@
+<!--
+IMP Build Workflow - Build commands and compilation pipeline
+    Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
+-->
+
 # IMP Build Workflow
 
 This document describes the complete build pipeline for the Inference Machine Pipeline (IMP), converting Brief specifications to executable binaries for the AMD/Xilinx Kria KV260.

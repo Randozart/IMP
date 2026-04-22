@@ -1,3 +1,6 @@
+// IMP Generated Hardware - SystemVerilog output (auto-generated, do not edit)
+//     Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
+//
 module neuralcore (
     input logic clk,
     input logic rst_n

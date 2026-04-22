@@ -1,5 +1,8 @@
 `timescale 1ns/1ps
 
+// IMP Generated Hardware - Testbench for neuralcore (auto-generated, do not edit)
+//     Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
+//
 module neuralcore_tb;
 
     // Clock and reset

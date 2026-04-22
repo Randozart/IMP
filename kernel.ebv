@@ -1,3 +1,6 @@
+// IMP Kernel Specification - ARM software layer state machine
+//     Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
+//
 // kernel.ebv - IMP Bare-Metal Kernel (Software Layer)
 // Runs on ARM Cortex-A53 Processing System
 

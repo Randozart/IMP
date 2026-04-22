@@ -1,4 +1,7 @@
 #!/bin/bash
+# IMP SystemVerilog Verifier - Lints generated SV files
+#     Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
+#
 # verify_sv.sh - Verify SystemVerilog files are correct
 # Usage: ./verify_sv.sh <file.sv> [file2.sv] ...
 #

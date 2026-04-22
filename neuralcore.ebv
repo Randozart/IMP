@@ -1,3 +1,6 @@
+// IMP Neural Core Specification - FPGA state machine for ternary neural inference
+//     Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
+//
 // neuralcore.ebv - IMP Neural Core Engine (Hardware Layer)
 // FPGA Programmable Logic with Ternary Computation
 // FSM-based: one element per clock cycle at 100MHz

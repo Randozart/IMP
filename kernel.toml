@@ -1,3 +1,6 @@
+# IMP Kernel Hardware Configuration - Memory map for ARM peripheral interface
+#     Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
+#
 # KV260 IMP Kernel Software Configuration
 # ARM Cortex-A53 bare-metal kernel
 # Addresses in 0x40000000 range (AXI4-Lite peripheral space)

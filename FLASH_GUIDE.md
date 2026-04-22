@@ -1,3 +1,8 @@
+<!--
+IMP Flashing Guide - Instructions for deploying IMP to KV260
+    Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
+-->
+
 # KV260 Flashing Guide
 
 This guide explains how to build and deploy the IMP (Inference Machine Pipeline) onto the Xilinx Kria KV260 board.

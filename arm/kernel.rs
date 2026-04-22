@@ -1,3 +1,6 @@
+// IMP Bare-Metal Kernel - ARM state machine for KV260 LLM inference orchestration
+//     Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
+//
 // IMP Bare-Metal Kernel - ARM Cortex-A53
 // Target: KV260, runs without Linux
 // Compile with: rustc --target arm-none-eabi --edition 2021

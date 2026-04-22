@@ -1,3 +1,8 @@
+<!--
+IMP Architecture Specification - Technical design for edge-native LLM acceleration
+    Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
+-->
+
 # SPEC_v0.1 - The Inference Machine Pipeline (Imp)
 
 ## 1. Overview

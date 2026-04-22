@@ -1,3 +1,6 @@
+# IMP Hardware Configuration - Memory map and resource definitions for KV260
+#     Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
+#
 # KV260 IMP Hardware Configuration v0.1
 
 [project]

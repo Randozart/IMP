@@ -1,3 +1,8 @@
+<!--
+IMP Inference Guide - Running LLM inference on KV260
+    Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
+-->
+
 # Inference Guide: Running LLM Inference on KV260
 
 This guide covers running inference on the IMP (Inference Machine Pipeline) system running on the Xilinx Kria KV260.

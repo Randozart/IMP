@@ -1,3 +1,8 @@
+<!--
+IMP Research Notes - Technical analysis and architecture decisions
+    Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
+-->
+
 # The Inference Machine Pipeline (Imp): Technical Specifications for Edge-Native LLM Acceleration
 
 *Please note: The engineering and architectural guidance provided in this document is for informational purposes only and does not constitute professional or safety-critical engineering advice. Hardware deployment carries inherent operational risks.*

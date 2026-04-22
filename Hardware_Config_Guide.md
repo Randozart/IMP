@@ -1,3 +1,8 @@
+<!--
+IMP Hardware Configuration Guide - Memory mapping for hardware generation
+    Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
+-->
+
 # Hardware Configuration Guide
 
 This guide explains how to configure `hardware.ooml` for your FPGA target, specifically optimized for the KV260 but applicable to any FPGA.
