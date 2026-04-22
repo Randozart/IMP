@@ -137,8 +137,8 @@ SD Card (FAT32):
 ### Create boot.scr:
 ```bash
 # Create boot.cmd
-echo "fatload mmc 0:1 0x4000A000 kernel.elf" > boot.cmd
-echo "bootelf 0x4000A000" >> boot.cmd
+echo "fatload mmc 0:1 0x00000000 kernel.elf" > boot.cmd
+echo "bootelf 0x00000000" >> boot.cmd
 
 # Compile to boot.scr
 mkimage -A arm -T script -C none -n "IMP Boot" -d boot.cmd boot.scr

@@ -18,6 +18,7 @@ data_width = 32
 
 [memory]
 # CPU Interface Registers (flipflop - small registers)
+# These are MMIO control registers between ARM and FPGA
 "0x4000A000" = { size = 1, type = "flipflop", element_bits = 8 }
 "0x4000A004" = { size = 1, type = "flipflop", element_bits = 8 }
 "0x4000A008" = { size = 1, type = "flipflop", element_bits = 4 }
@@ -28,19 +29,19 @@ data_width = 32
 "0x4000A04C" = { size = 1, type = "flipflop", element_bits = 1 }
 "0x40000050" = { size = 1, type = "flipflop", element_bits = 16 }
 
-# BRAM/UltraRAM Buffers (262144 x 16-bit = 512KB each)
-"0x40A0A000" = { size = 262144, type = "ultraram", element_bits = 16 }
-"0x40A60000" = { size = 262144, type = "ultraram", element_bits = 16 }
+# BRAM: Single 512KB buffer for active layer computation
+# Weights are streamed from DDR4 (0x10000000+) via AXI, not stored in FPGA
+# Only ONE layer fits in BRAM at a time
 "0x40A80000" = { size = 262144, type = "bram", element_bits = 16 }
-"0x40AA0000" = { size = 262144, type = "bram", element_bits = 16 }
-"0x40AC0000" = { size = 262144, type = "bram", element_bits = 16 }
-"0x40AE0000" = { size = 262144, type = "bram", element_bits = 16 }
-"0x40B00000" = { size = 262144, type = "bram", element_bits = 16 }
-"0x40B20000" = { size = 262144, type = "bram", element_bits = 16 }
-"0x40B40000" = { size = 262144, type = "bram", element_bits = 16 }
-"0x40B60000" = { size = 262144, type = "bram", element_bits = 16 }
+
+# UltraRAM: 2.25MB scratch space for intermediate results
+# Can fit ~4 full layers of 512KB each
+"0x40B00000" = { size = 262144, type = "ultraram", element_bits = 16 }
 
 [io]
 "0x4000A000" = { pin = "H5", direction = "output" }
 "0x4000A004" = { pin = "J5", direction = "output" }
 "0x4000A008" = { pin = "H6", direction = "output" }
+
+# NOTE: Model weights (1.77GB for Qwen 9B) are stored in DDR4 at 0x10000000
+# They are NOT stored in FPGA BRAM - they are streamed as needed via AXI

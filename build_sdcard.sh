@@ -52,18 +52,21 @@ if [ -f neuralcore.sv ]; then
     mv neuralcore.sv "$BUILD_DIR/"
 fi
 
-# Copy hardware config
+# Copy hardware config and linker script
 cp hardware.toml "$BUILD_DIR/"
+[ -f arm/memory.ld ] && cp arm/memory.ld "$BUILD_DIR/"
 
 echo "[4/6] Creating boot files..."
 
-# Create boot.cmd
+# Create boot.cmd - Load to DDR4 at 0x00000000 (not FPGA MMIO at 0x4000A000!)
 cat > "$BUILD_DIR/boot.cmd" << 'EOF'
 # IMP Boot Script for KV260
-fatload mmc 0:1 0x4000A000 kernel.elf
+# NOTE: kernel.elf loads to 0x00000000 (DDR4), NOT 0x4000A000 (FPGA MMIO)
+# 0x4000A000 is the MMIO address for talking to FPGA registers
+fatload mmc 0:1 0x00000000 kernel.elf
 fatload mmc 0:1 0x50000000 system.dtb
 fatload mmc 0:1 0x60000000 neuralcore.bit
-booti 0x4000A000 - 0x50000000
+booti 0x00000000 - 0x50000000
 EOF
 
 # Compile boot script
@@ -90,7 +93,8 @@ echo ""
 echo "=== Build Complete ==="
 echo ""
 echo "SD Card Contents:"
-echo "  kernel.elf      - ARM bare-metal kernel"
+echo "  kernel.elf      - ARM bare-metal kernel (loads to DDR4 0x00000000)"
+echo "  memory.ld       - Linker script for DDR4 memory layout"
 echo "  neuralcore.sv   - FPGA design (synthesize with Vivado)"
 echo "  hardware.toml   - Memory configuration"
 echo "  boot.cmd/.scr   - U-Boot boot script"

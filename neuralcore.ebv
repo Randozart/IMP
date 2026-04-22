@@ -4,6 +4,10 @@
 // neuralcore.ebv - IMP Neural Core Engine (Hardware Layer)
 // FPGA Programmable Logic with Ternary Computation
 // FSM-based: one element per clock cycle at 100MHz
+//
+// IMPORTANT: Weights are stored in DDR4 at 0x10000000+, NOT in FPGA BRAM.
+// Weights are streamed into BRAM one layer at a time via AXI.
+// BRAM is 518KB total, UltraRAM is 2.25MB - we can only fit one layer at a time.
 
 // === CPU Interface (from ARM via AXI4-Lite) ===
 trg cpu_control: UInt @ 0x4000a000 /0..7;
@@ -22,24 +26,19 @@ let opcode: UInt @ 0x4000a008 /0..3 = 0;
 
 // === FSM State Machine ===
 let calc_index: UInt = 0;
-let calc_phase: UInt = 0;
+let calc_phase: UInt = 0;  // 0=IDLE, 1=ATTENTION, 2=MLP_GATE, 3=MLP_UP, 4=MLP_DOWN
 let acc_result: Int = 0;
 let current_input: Int = 0;
 let current_weight: Int = 0;
 
-// === Memory Buffers (BRAM/UltraRAM) ===
-let kv_cache_k: Int[262144] @ 0x40a0a000 / x16;
-let kv_cache_v: Int[262144] @ 0x40a60000 / x16;
-let input_embedding: Int[262144] @ 0x40a80000 / x16;
-let output_logits: Int[262144] @ 0x40aa0000 / x16;
-let mlp_gate: Int[262144] @ 0x40ac0000 / x16;
-let mlp_up: Int[262144] @ 0x40ae0000 / x16;
-let mlp_down: Int[262144] @ 0x40b00000 / x16;
-let attention_qkv: Int[262144] @ 0x40b20000 / x16;
-let attention_out: Int[262144] @ 0x40b40000 / x16;
-let embedding_table: Int[262144] @ 0x40b60000 / x16;
+// === Single BRAM Buffer (512KB) for Active Layer ===
+// Only ONE layer's weights fit in BRAM at a time
+// ARM streams weights from DDR4 (0x10000000+) via AXI before triggering compute
+let weight_buffer: Int[262144] @ 0x40A80000 / x16;
 
-let scratch: Int[262144] @ 0x40a80000 / x16;
+// === UltraRAM Scratch (2.25MB) for Intermediate Results ===
+// Can hold multiple activation vectors
+let scratch: Int[262144] @ 0x40B00000 / x16;
 
 // === CPU Interface Transaction ===
 rct txn sync_control [cpu_control != control] [control == cpu_control] {
@@ -48,59 +47,30 @@ rct txn sync_control [cpu_control != control] [control == cpu_control] {
     term;
 };
 
-// === Load Transactions ===
-rct txn load_kv_k [cpu_write_en && control == 3][kv_cache_k[cpu_write_addr] == cpu_write_data] {
-    &kv_cache_k[cpu_write_addr] = cpu_write_data;
+// === Load Layer Weights (from DDR4 via AXI to BRAM) ===
+// ARM DMA transfers weights to FPGA BRAM before triggering compute
+rct txn load_weights [cpu_write_en && control == 1][weight_buffer[cpu_write_addr] == cpu_write_data] {
+    &weight_buffer[cpu_write_addr] = cpu_write_data;
     term;
 };
 
-rct txn load_kv_v [cpu_write_en && control == 4][kv_cache_v[cpu_write_addr] == cpu_write_data] {
-    &kv_cache_v[cpu_write_addr] = cpu_write_data;
+// === Load Input Embedding (activation vector) ===
+rct txn load_input [cpu_write_en && control == 5][scratch[cpu_write_addr] == cpu_write_data] {
+    &scratch[cpu_write_addr] = cpu_write_data;
     term;
 };
 
-rct txn load_input [cpu_write_en && control == 5][input_embedding[cpu_write_addr] == cpu_write_data] {
-    &input_embedding[cpu_write_addr] = cpu_write_data;
-    term;
-};
-
-rct txn load_output [cpu_write_en && control == 6][output_logits[cpu_write_addr] == cpu_write_data] {
-    &output_logits[cpu_write_addr] = cpu_write_data;
-    term;
-};
-
-rct txn load_mlp_gate [cpu_write_en && control == 10][mlp_gate[cpu_write_addr] == cpu_write_data] {
-    &mlp_gate[cpu_write_addr] = cpu_write_data;
-    term;
-};
-
-rct txn load_mlp_up [cpu_write_en && control == 11][mlp_up[cpu_write_addr] == cpu_write_data] {
-    &mlp_up[cpu_write_addr] = cpu_write_data;
-    term;
-};
-
-rct txn load_mlp_down [cpu_write_en && control == 12][mlp_down[cpu_write_addr] == cpu_write_data] {
-    &mlp_down[cpu_write_addr] = cpu_write_data;
-    term;
-};
-
-rct txn load_attn_qkv [cpu_write_en && control == 13][attention_qkv[cpu_write_addr] == cpu_write_data] {
-    &attention_qkv[cpu_write_addr] = cpu_write_data;
-    term;
-};
-
-rct txn load_attn_out [cpu_write_en && control == 14][attention_out[cpu_write_addr] == cpu_write_data] {
-    &attention_out[cpu_write_addr] = cpu_write_data;
-    term;
-};
-
-rct txn load_embed [cpu_write_en && control == 15][embedding_table[cpu_write_addr] == cpu_write_data] {
-    &embedding_table[cpu_write_addr] = cpu_write_data;
-    term;
-};
-
-// === FSM Forward Pass ===
+// === FSM Forward Pass with TERNARY MULTIPLY ===
 // calc_phase: 0=IDLE, 1=ATTENTION, 2=MLP_GATE, 3=MLP_UP, 4=MLP_DOWN
+// opcode: 1=attention, 2=mlp_gate, 3=mlp_up, 4=mlp_down
+//
+// Ternary multiply logic:
+//   weight == 1:  acc += input  (multiply by +1)
+//   weight == -1: acc -= input  (multiply by -1)
+//   weight == 0:   acc += 0      (skip, no contribution)
+//
+// Note: Weights stored in weight_buffer (from DDR4 via AXI)
+//       Input activations stored in scratch
 
 rct txn begin_forward [control == 20 && status == 0] [status == 1] {
     &calc_index = 0;
@@ -109,76 +79,63 @@ rct txn begin_forward [control == 20 && status == 0] [status == 1] {
     term;
 };
 
-// Attention: accumulate W * input
-rct txn attention_compute [calc_phase == 1 && calc_index < 262144] [status == 1] {
-    &current_input = input_embedding[calc_index];
-    &current_weight = attention_qkv[calc_index];
-    &acc_result = acc_result + current_input;
+// === TERNARY COMPUTATION CORE ===
+// This is the actual neural network math
+// Accumulates: result = sum(weight[i] * input[i]) for i in 0..262144
+
+rct txn compute_ternary [calc_phase >= 1 && calc_phase <= 4 && calc_index < 262144] [status == calc_phase] {
+    &current_input = scratch[calc_index];
+    &current_weight = weight_buffer[calc_index];
+    // TERNARY: if weight==1 add, if weight==-1 subtract, if weight==0 skip
+    [current_weight == 1] &acc_result = acc_result + current_input;
+    [current_weight == -1] &acc_result = acc_result - current_input;
+    [current_weight == 0] &acc_result = acc_result + 0;
     &calc_index = calc_index + 1;
     term;
 };
 
-rct txn attention_done [calc_phase == 1 && calc_index >= 262144] [status == 2] {
-    &output_logits[0] = acc_result;
+// === Phase Transitions ===
+// After completing ternary accumulation, store result and prepare for next phase
+
+rct txn attention_done [calc_phase == 1 && calc_index >= 262144] [status == 10] {
+    &scratch[0] = acc_result;  // Store attention output
+    &calc_index = 0;
+    &calc_phase = 0;  // Return to IDLE
+    term;
+};
+
+rct txn mlp_gate_done [calc_phase == 2 && calc_index >= 262144] [status == 10] {
+    &scratch[1] = acc_result;  // Store MLP gate output
+    &calc_index = 0;
     &calc_phase = 0;
     term;
 };
 
-// MLP Gate
-rct txn mlp_gate_compute [calc_phase == 2 && calc_index < 262144] [status == 2] {
-    &current_input = input_embedding[calc_index];
-    &current_weight = mlp_gate[calc_index];
-    &acc_result = acc_result + current_input;
-    &calc_index = calc_index + 1;
-    term;
-};
-
-rct txn mlp_gate_done [calc_phase == 2 && calc_index >= 262144] [status == 3] {
-    &scratch[0] = acc_result;
+rct txn mlp_up_done [calc_phase == 3 && calc_index >= 262144] [status == 10] {
+    &scratch[2] = acc_result;  // Store MLP up output
     &calc_index = 0;
-    term;
-};
-
-// MLP Up
-rct txn mlp_up_compute [calc_phase == 3 && calc_index < 262144] [status == 3] {
-    &current_input = input_embedding[calc_index];
-    &current_weight = mlp_up[calc_index];
-    &acc_result = acc_result + current_input;
-    &calc_index = calc_index + 1;
-    term;
-};
-
-rct txn mlp_up_done [calc_phase == 3 && calc_index >= 262144] [status == 4] {
-    &scratch[1] = acc_result;
-    &calc_index = 0;
-    term;
-};
-
-// MLP Down
-rct txn mlp_down_compute [calc_phase == 4 && calc_index < 262144] [status == 4] {
-    &current_input = scratch[0] + scratch[1];
-    &current_weight = mlp_down[calc_index];
-    &acc_result = acc_result + current_input;
-    &calc_index = calc_index + 1;
+    &calc_phase = 0;
     term;
 };
 
 rct txn mlp_down_done [calc_phase == 4 && calc_index >= 262144] [status == 5] {
-    &output_logits[0] = acc_result;
+    &scratch[3] = acc_result;  // Store final MLP output
+    &calc_index = 0;
     &calc_phase = 0;
     term;
 };
 
+// === Forward Pass Complete ===
 rct txn forward_complete [status == 5] [status == 2] {
     &status = 2;
     term;
 };
 
-// === Read Result ===
+// === Read Result (ARM reads from scratch buffer) ===
 let read_data: Int @ 0x40000050 / x16 = 0;
 
-rct txn read_result [cpu_read_en && control == 25][read_data == output_logits[cpu_write_addr]] {
-    &read_data = output_logits[cpu_write_addr];
+rct txn read_result [cpu_read_en && control == 25][read_data == scratch[cpu_write_addr]] {
+    &read_data = scratch[cpu_write_addr];
     term;
 };
 
@@ -190,5 +147,16 @@ rct txn reset [control == 0][control == 0 && status == 0] {
     &calc_index = 0;
     &calc_phase = 0;
     &acc_result = 0;
+    term;
+};
+
+// === Load KV Cache (for attention) ===
+rct txn load_kv_k [cpu_write_en && control == 3][scratch[cpu_write_addr] == cpu_write_data] {
+    &scratch[cpu_write_addr] = cpu_write_data;
+    term;
+};
+
+rct txn load_kv_v [cpu_write_en && control == 4][scratch[cpu_write_addr] == cpu_write_data] {
+    &scratch[cpu_write_addr] = cpu_write_data;
     term;
 };

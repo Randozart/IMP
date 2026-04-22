@@ -60,7 +60,7 @@ data_width = 32
 
 [memory]
 # Control registers (flipflop)
-"0x40000a000" = { size = 1, type = "flipflop", element_bits = 8 }
+"0x4000A000" = { size = 1, type = "flipflop", element_bits = 8 }
 "0x40000a04" = { size = 1, type = "flipflop", element_bits = 8 }
 
 # CPU interface (18-bit address for 262K elements)
