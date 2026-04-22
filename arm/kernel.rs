@@ -309,7 +309,8 @@ impl WeightLoader {
         WeightLoader
     }
 
-    // Load layer weights from DDR4 and stream to FPGA via mailbox
+    // Load layer weights from DDR4 and stream directly to FPGA via mailbox
+    // Note: NO temp buffer - we stream directly to avoid 512KB stack overflow
     // layer_idx: which layer (0-31 for Qwen 9B)
     // layer_type: which weight matrix within the layer
     pub fn load_layer_weights(
@@ -319,17 +320,21 @@ impl WeightLoader {
         layer_type: LayerType,
     ) {
         let offset = MODEL_BASE + (layer_idx * LAYER_SIZE as u32 * 4);  // 4 matrices per layer
-        let mut temp_buf = [0i16; LAYER_SIZE];
 
-        // Load weights from DDR4 into temp buffer
-        // In real impl, this would use DMA or AXI bus master
+        // Trigger load_weights transaction in FPGA FSM
+        dispatcher.state.control = 1;
+
+        // Stream weights directly from DDR4 to FPGA mailbox
         for i in 0..LAYER_SIZE {
             let addr = offset + (i as u32 * 2);
-            temp_buf[i] = unsafe { core::ptr::read_volatile(addr as *const u16) as i16 };
+            // Read directly from DDR4
+            let value = unsafe { core::ptr::read_volatile(addr as *const u16) as i32 };
+            // Write directly to FPGA mailbox
+            dispatcher.state.write_addr = i as u32;
+            dispatcher.state.write_data = value;
+            dispatcher.state.write_en = 1;
+            dispatcher.state.write_en = 0;
         }
-
-        // Stream weights to FPGA via mailbox
-        dispatcher.send_weights(&temp_buf);
     }
 }
 
@@ -380,18 +385,6 @@ pub struct LayerDispatcher<'a> {
 impl<'a> LayerDispatcher<'a> {
     pub fn new(state: &'a mut State) -> Self {
         LayerDispatcher { state }
-    }
-
-    // Stream weights to FPGA via MMIO mailbox
-    // control=1 triggers load_weights transaction in neuralcore.ebv
-    pub fn send_weights(&mut self, data: &[i16]) {
-        self.state.control = 1;  // Set control = 1 for load_weights transaction
-        for (i, &value) in data.iter().take(262144).enumerate() {
-            self.state.write_addr = i as u32;
-            self.state.write_data = value as i32;
-            self.state.write_en = 1;  // Pulse write enable
-            self.state.write_en = 0;
-        }
     }
 
     // Stream input activations to FPGA via MMIO mailbox

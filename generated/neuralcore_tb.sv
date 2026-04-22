@@ -1,15 +1,10 @@
 `timescale 1ns/1ps
 
-// IMP Generated Hardware - Testbench for neuralcore (auto-generated, do not edit)
-//     Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
-//
 module neuralcore_tb;
 
-    // Clock and reset
     logic clk = 0;
     logic rst_n = 0;
 
-    // Testbench control
     logic [7:0] cpu_control = 0;
     logic [7:0] cpu_status;
     logic [3:0] cpu_opcode = 0;
@@ -18,56 +13,75 @@ module neuralcore_tb;
     logic cpu_write_en = 0;
     logic cpu_read_en = 0;
 
-    // Instantiate Unit Under Test
     neuralcore uut (
         .clk(clk),
         .rst_n(rst_n)
     );
 
-    // Clock generation (100MHz = 10ns period)
     always #5 clk = ~clk;
 
-    // Test sequence
+    integer cycle;
     initial begin
+        cycle = 0;
+
         $dumpfile("waveform.vcd");
         $dumpvars(0, uut);
 
-        // Reset sequence
-        #0 rst_n = 0;
-        #10 rst_n = 1;
-        #5;
+        rst_n = 0;
+        clk = 0;
 
-        // Test 1: Sync control
+        #100;
+        rst_n = 1;
+        #100;
+
+        $display("=== Test 1: Sync control (control=1) ===");
         cpu_control = 1;
-        #10;
+        #100;
         cpu_control = 0;
-        #10;
+        #100;
 
-        // Test 2: Load input data
+        $display("=== Test 2: Load weight data ===");
         cpu_control = 1;
+        cpu_write_addr = 0;
+        cpu_write_data = 16'h0001;
         cpu_write_en = 1;
+        #100;
+        cpu_write_en = 0;
+        #100;
+
+        $display("=== Test 3: Load input ===");
+        cpu_control = 5;
         cpu_write_addr = 0;
         cpu_write_data = 16'h1234;
-        #10;
-        cpu_write_en = 0;
-        #10;
-
-        // Test 3: Execute forward pass
-        cpu_control = 20;
-        #10;
-        cpu_control = 0;
-        #10;
-
-        // Wait and finish
+        cpu_write_en = 1;
         #100;
-        $display("Test completed successfully.");
+        cpu_write_en = 0;
+        #100;
+
+        $display("=== Test 4: Execute forward pass ===");
+        cpu_opcode = 1;
+        cpu_control = 20;
+        #100;
+        cpu_control = 0;
+        #1000;
+
+        $display("=== Test 5: Read result ===");
+        cpu_control = 25;
+        cpu_write_addr = 0;
+        cpu_read_en = 1;
+        #100;
+        cpu_read_en = 0;
+        #100;
+
+        $display("=== All tests completed ===");
         $finish;
     end
 
-    // Monitor for debugging
     always @(posedge clk) begin
-        if (uut.control != 0) begin
-            $display("t=%0d: control=%d, status=%d", $time, uut.control, uut.status);
+        cycle = cycle + 1;
+        if (uut.control != 0 || uut.status != 0) begin
+            $display("t=%0d: control=%d, status=%d, calc_phase=%d, calc_index=%d",
+                     cycle, uut.control, uut.status, uut.calc_phase, uut.calc_index);
         end
     end
 

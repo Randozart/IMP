@@ -1,2 +1,12 @@
 # Ignore original research (superseded)
 INITIAL_RESEARCH.md
+
+# Build artifacts
+obj_dir/
+sim_build/
+*.vcd
+neuralcore_sim
+
+# Generated SystemVerilog (should be in generated/ not root)
+neuralcore.sv
+neuralcore_tb.sv

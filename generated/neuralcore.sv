@@ -1,6 +1,3 @@
-// IMP Generated Hardware - SystemVerilog output (auto-generated, do not edit)
-//     Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
-//
 module neuralcore (
     input logic clk,
     input logic rst_n
@@ -22,17 +19,8 @@ module neuralcore (
     logic signed [31:0] acc_result;
     logic signed [31:0] current_input;
     logic signed [31:0] current_weight;
-    logic signed [15:0] kv_cache_k [0:262143] /* synthesis keep */;
-    logic signed [15:0] kv_cache_v [0:262143] /* synthesis keep */;
-    logic signed [15:0] input_embedding [0:262143] /* synthesis syn_ramstyle = "block_ram" */ /* synthesis keep */;
-    logic signed [15:0] output_logits [0:262143] /* synthesis syn_ramstyle = "block_ram" */ /* synthesis keep */;
-    logic signed [15:0] mlp_gate [0:262143] /* synthesis syn_ramstyle = "block_ram" */ /* synthesis keep */;
-    logic signed [15:0] mlp_up [0:262143] /* synthesis syn_ramstyle = "block_ram" */ /* synthesis keep */;
-    logic signed [15:0] mlp_down [0:262143] /* synthesis syn_ramstyle = "block_ram" */ /* synthesis keep */;
-    logic signed [15:0] attention_qkv [0:262143] /* synthesis syn_ramstyle = "block_ram" */ /* synthesis keep */;
-    logic signed [15:0] attention_out [0:262143] /* synthesis syn_ramstyle = "block_ram" */ /* synthesis keep */;
-    logic signed [15:0] embedding_table [0:262143] /* synthesis syn_ramstyle = "block_ram" */ /* synthesis keep */;
-    logic signed [15:0] scratch [0:262143] /* synthesis syn_ramstyle = "block_ram" */ /* synthesis keep */;
+    logic signed [15:0] weight_buffer [0:262143] /* synthesis syn_ramstyle = "block_ram" */ /* synthesis keep */;
+    logic signed [15:0] scratch [0:262143] /* synthesis keep */;
     logic signed [15:0] read_data;
 
     // Logic for variable: control
@@ -85,23 +73,26 @@ module neuralcore (
             if (((control == 20) && (status == 0))) begin
                 calc_index <= 0;
             end
-            else if (((calc_phase == 1) && (calc_index < 262144))) begin
+            else if ((((calc_phase >= 1) && (calc_phase <= 4)) && (calc_index < 262144))) begin
+                if ((current_weight == 1)) begin
+                end
+                if (((current_weight + 1) == 0)) begin
+                end
+                if ((current_weight == 0)) begin
+                end
                 calc_index <= (calc_index + 1);
             end
-            else if (((calc_phase == 2) && (calc_index < 262144))) begin
-                calc_index <= (calc_index + 1);
+            else if (((calc_phase == 1) && (calc_index >= 262144))) begin
+                calc_index <= 0;
             end
             else if (((calc_phase == 2) && (calc_index >= 262144))) begin
                 calc_index <= 0;
             end
-            else if (((calc_phase == 3) && (calc_index < 262144))) begin
-                calc_index <= (calc_index + 1);
-            end
             else if (((calc_phase == 3) && (calc_index >= 262144))) begin
                 calc_index <= 0;
             end
-            else if (((calc_phase == 4) && (calc_index < 262144))) begin
-                calc_index <= (calc_index + 1);
+            else if (((calc_phase == 4) && (calc_index >= 262144))) begin
+                calc_index <= 0;
             end
             else if ((control == 0)) begin
                 calc_index <= 0;
@@ -118,6 +109,12 @@ module neuralcore (
                 calc_phase <= opcode;
             end
             else if (((calc_phase == 1) && (calc_index >= 262144))) begin
+                calc_phase <= 0;
+            end
+            else if (((calc_phase == 2) && (calc_index >= 262144))) begin
+                calc_phase <= 0;
+            end
+            else if (((calc_phase == 3) && (calc_index >= 262144))) begin
                 calc_phase <= 0;
             end
             else if (((calc_phase == 4) && (calc_index >= 262144))) begin
@@ -137,17 +134,16 @@ module neuralcore (
             if (((control == 20) && (status == 0))) begin
                 acc_result <= 0;
             end
-            else if (((calc_phase == 1) && (calc_index < 262144))) begin
+            else if ((((calc_phase >= 1) && (calc_phase <= 4)) && (calc_index < 262144))) begin
+                if ((current_weight == 1)) begin
                 acc_result <= (acc_result + current_input);
-            end
-            else if (((calc_phase == 2) && (calc_index < 262144))) begin
-                acc_result <= (acc_result + current_input);
-            end
-            else if (((calc_phase == 3) && (calc_index < 262144))) begin
-                acc_result <= (acc_result + current_input);
-            end
-            else if (((calc_phase == 4) && (calc_index < 262144))) begin
-                acc_result <= (acc_result + current_input);
+                end
+                if (((current_weight + 1) == 0)) begin
+                acc_result <= (acc_result - current_input);
+                end
+                if ((current_weight == 0)) begin
+                acc_result <= acc_result;
+                end
             end
             else if ((control == 0)) begin
                 acc_result <= 0;
@@ -160,17 +156,14 @@ module neuralcore (
         if (!rst_n) begin
             current_input <= 0;
         end else begin
-            if (((calc_phase == 1) && (calc_index < 262144))) begin
-                current_input <= input_embedding[calc_index];
-            end
-            else if (((calc_phase == 2) && (calc_index < 262144))) begin
-                current_input <= input_embedding[calc_index];
-            end
-            else if (((calc_phase == 3) && (calc_index < 262144))) begin
-                current_input <= input_embedding[calc_index];
-            end
-            else if (((calc_phase == 4) && (calc_index < 262144))) begin
-                current_input <= (scratch[0] + scratch[1]);
+            if ((((calc_phase >= 1) && (calc_phase <= 4)) && (calc_index < 262144))) begin
+                current_input <= scratch[calc_index];
+                if ((current_weight == 1)) begin
+                end
+                if (((current_weight + 1) == 0)) begin
+                end
+                if ((current_weight == 0)) begin
+                end
             end
         end
     end
@@ -180,126 +173,51 @@ module neuralcore (
         if (!rst_n) begin
             current_weight <= 0;
         end else begin
-            if (((calc_phase == 1) && (calc_index < 262144))) begin
-                current_weight <= attention_qkv[calc_index];
-            end
-            else if (((calc_phase == 2) && (calc_index < 262144))) begin
-                current_weight <= mlp_gate[calc_index];
-            end
-            else if (((calc_phase == 3) && (calc_index < 262144))) begin
-                current_weight <= mlp_up[calc_index];
-            end
-            else if (((calc_phase == 4) && (calc_index < 262144))) begin
-                current_weight <= mlp_down[calc_index];
+            if ((((calc_phase >= 1) && (calc_phase <= 4)) && (calc_index < 262144))) begin
+                current_weight <= weight_buffer[calc_index];
+                if ((current_weight == 1)) begin
+                end
+                if (((current_weight + 1) == 0)) begin
+                end
+                if ((current_weight == 0)) begin
+                end
             end
         end
     end
 
-    // Logic for variable: kv_cache_k
-    // RAM template for kv_cache_k (type: Some("ultraram"), size: 262144)
+    // Logic for variable: weight_buffer
+    // RAM template for weight_buffer (type: Some("bram"), size: 262144)
     always_ff @(posedge clk) begin
         // No reset initialization needed - BRAM auto-initializes on power-up
-        if ((cpu_write_en && (control == 3))) begin
-                    kv_cache_k[cpu_write_addr] <= cpu_write_data;
-        end
-    end
-
-    // Logic for variable: kv_cache_v
-    // RAM template for kv_cache_v (type: Some("ultraram"), size: 262144)
-    always_ff @(posedge clk) begin
-        // No reset initialization needed - BRAM auto-initializes on power-up
-        if ((cpu_write_en && (control == 4))) begin
-                    kv_cache_v[cpu_write_addr] <= cpu_write_data;
-        end
-    end
-
-    // Logic for variable: input_embedding
-    // RAM template for input_embedding (type: Some("bram"), size: 262144)
-    always_ff @(posedge clk) begin
-        // No reset initialization needed - BRAM auto-initializes on power-up
-        if ((cpu_write_en && (control == 5))) begin
-                    input_embedding[cpu_write_addr] <= cpu_write_data;
-        end
-    end
-
-    // Logic for variable: output_logits
-    // RAM template for output_logits (type: Some("bram"), size: 262144)
-    always_ff @(posedge clk) begin
-        // No reset initialization needed - BRAM auto-initializes on power-up
-        if ((cpu_write_en && (control == 6))) begin
-                    output_logits[cpu_write_addr] <= cpu_write_data;
-        end
-        else if (((calc_phase == 1) && (calc_index >= 262144))) begin
-                    output_logits[0] <= acc_result;
-        end
-        else if (((calc_phase == 4) && (calc_index >= 262144))) begin
-                    output_logits[0] <= acc_result;
-        end
-    end
-
-    // Logic for variable: mlp_gate
-    // RAM template for mlp_gate (type: Some("bram"), size: 262144)
-    always_ff @(posedge clk) begin
-        // No reset initialization needed - BRAM auto-initializes on power-up
-        if ((cpu_write_en && (control == 10))) begin
-                    mlp_gate[cpu_write_addr] <= cpu_write_data;
-        end
-    end
-
-    // Logic for variable: mlp_up
-    // RAM template for mlp_up (type: Some("bram"), size: 262144)
-    always_ff @(posedge clk) begin
-        // No reset initialization needed - BRAM auto-initializes on power-up
-        if ((cpu_write_en && (control == 11))) begin
-                    mlp_up[cpu_write_addr] <= cpu_write_data;
-        end
-    end
-
-    // Logic for variable: mlp_down
-    // RAM template for mlp_down (type: Some("bram"), size: 262144)
-    always_ff @(posedge clk) begin
-        // No reset initialization needed - BRAM auto-initializes on power-up
-        if ((cpu_write_en && (control == 12))) begin
-                    mlp_down[cpu_write_addr] <= cpu_write_data;
-        end
-    end
-
-    // Logic for variable: attention_qkv
-    // RAM template for attention_qkv (type: Some("bram"), size: 262144)
-    always_ff @(posedge clk) begin
-        // No reset initialization needed - BRAM auto-initializes on power-up
-        if ((cpu_write_en && (control == 13))) begin
-                    attention_qkv[cpu_write_addr] <= cpu_write_data;
-        end
-    end
-
-    // Logic for variable: attention_out
-    // RAM template for attention_out (type: Some("bram"), size: 262144)
-    always_ff @(posedge clk) begin
-        // No reset initialization needed - BRAM auto-initializes on power-up
-        if ((cpu_write_en && (control == 14))) begin
-                    attention_out[cpu_write_addr] <= cpu_write_data;
-        end
-    end
-
-    // Logic for variable: embedding_table
-    // RAM template for embedding_table (type: Some("bram"), size: 262144)
-    always_ff @(posedge clk) begin
-        // No reset initialization needed - BRAM auto-initializes on power-up
-        if ((cpu_write_en && (control == 15))) begin
-                    embedding_table[cpu_write_addr] <= cpu_write_data;
+        if ((cpu_write_en && (control == 1))) begin
+                    weight_buffer[cpu_write_addr] <= cpu_write_data;
         end
     end
 
     // Logic for variable: scratch
-    // RAM template for scratch (type: Some("bram"), size: 262144)
+    // RAM template for scratch (type: Some("ultraram"), size: 262144)
     always_ff @(posedge clk) begin
         // No reset initialization needed - BRAM auto-initializes on power-up
-        if (((calc_phase == 2) && (calc_index >= 262144))) begin
+        if ((cpu_write_en && (control == 5))) begin
+                    scratch[cpu_write_addr] <= cpu_write_data;
+        end
+        else if (((calc_phase == 1) && (calc_index >= 262144))) begin
                     scratch[0] <= acc_result;
         end
-        else if (((calc_phase == 3) && (calc_index >= 262144))) begin
+        else if (((calc_phase == 2) && (calc_index >= 262144))) begin
                     scratch[1] <= acc_result;
+        end
+        else if (((calc_phase == 3) && (calc_index >= 262144))) begin
+                    scratch[2] <= acc_result;
+        end
+        else if (((calc_phase == 4) && (calc_index >= 262144))) begin
+                    scratch[3] <= acc_result;
+        end
+        else if ((cpu_write_en && (control == 3))) begin
+                    scratch[cpu_write_addr] <= cpu_write_data;
+        end
+        else if ((cpu_write_en && (control == 4))) begin
+                    scratch[cpu_write_addr] <= cpu_write_data;
         end
     end
 
@@ -309,7 +227,7 @@ module neuralcore (
             read_data <= 0;
         end else begin
             if ((cpu_read_en && (control == 25))) begin
-                read_data <= output_logits[cpu_write_addr];
+                read_data <= scratch[cpu_write_addr];
             end
         end
     end

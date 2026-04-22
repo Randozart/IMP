@@ -27,7 +27,7 @@ data_width = 32
 "0x4000A044" = { size = 1, type = "flipflop", element_bits = 18 }
 "0x4000A048" = { size = 1, type = "flipflop", element_bits = 1 }
 "0x4000A04C" = { size = 1, type = "flipflop", element_bits = 1 }
-"0x40000050" = { size = 1, type = "flipflop", element_bits = 16 }
+"0x4000A050" = { size = 1, type = "flipflop", element_bits = 16 }
 
 # BRAM: Single 512KB buffer for active layer computation
 # Weights are streamed from DDR4 (0x10000000+) via AXI, not stored in FPGA

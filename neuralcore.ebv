@@ -87,9 +87,10 @@ rct txn compute_ternary [calc_phase >= 1 && calc_phase <= 4 && calc_index < 2621
     &current_input = scratch[calc_index];
     &current_weight = weight_buffer[calc_index];
     // TERNARY: if weight==1 add, if weight==-1 subtract, if weight==0 skip
+    // Note: Using current_weight + 1 == 0 instead of current_weight == -1 (compiler unary minus limitation)
     [current_weight == 1] &acc_result = acc_result + current_input;
-    [current_weight == -1] &acc_result = acc_result - current_input;
-    [current_weight == 0] &acc_result = acc_result + 0;
+    [current_weight + 1 == 0] &acc_result = acc_result - current_input;
+    [current_weight == 0] &acc_result = acc_result;
     &calc_index = calc_index + 1;
     term;
 };
@@ -132,7 +133,7 @@ rct txn forward_complete [status == 5] [status == 2] {
 };
 
 // === Read Result (ARM reads from scratch buffer) ===
-let read_data: Int @ 0x40000050 / x16 = 0;
+let read_data: Int @ 0x4000A050 / x16 = 0;
 
 rct txn read_result [cpu_read_en && control == 25][read_data == scratch[cpu_write_addr]] {
     &read_data = scratch[cpu_write_addr];
