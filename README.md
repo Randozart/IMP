@@ -16,9 +16,11 @@ This project is in active development. The system has been:
 
 ## The IMP Project
 
-The IMP project is a response to the centralization of AI into subscription-based cloud services. Over two weeks of development, I created a custom language called Brief to map neural network operations directly to FPGA gate logic. By combining 1.58-bit ternary quantization with Gated Delta Networks, the system enables a 9B parameter model to run on a standard $250 Kria KV260 board. Executing bare-metal on the ARM processor removes the overhead of a traditional operating system, maximizing memory availability and reducing the 19.2 GB/s bandwidth bottleneck.
+The IMP project is a response to the current status quo of AI into subscription-based cloud services. I created a custom language called Brief which allowed me to write the same syntax for both hardware and software, and I realised I could map neural network operations directly to FPGA gate logic. By combining 1.58-bit ternary quantization with Gated Delta Networks, the system enables a 9B parameter model to run on a standard $250 Kria KV260 board. Executing bare-metal on the ARM processor removes the overhead of a traditional operating system, maximizing memory availability and reducing the 19.2 GB/s bandwidth bottleneck.
 
 I am open-sourcing the IMP engine and the Brief compiler under the GPLv2 license to ensure the logic remains a public, reciprocal resource. This architecture significantly lowers the environmental footprint of AI by replacing data-center power requirements with efficient, edge-native silicon logic. The goal is to provide individuals with the hardware design tools and model access usually reserved for large corporations. By moving AI from a rented service to locally-owned hardware, we ensure that the ability to process and generate information remains a permanent utility under the user's direct control.
+
+I am currently actively developing this project, and current known limitations will likely be solved in the near future.
 
 ---
 
@@ -124,7 +126,7 @@ imp/
 
 ## Known Limitations
 
-- **Weight Loading**: DDR4→FPGA streaming not fully implemented
+- **DMA Transfer**: Weights currently stream via AXI4-Lite MMIO (CPU bound). High-speed AXI-DMA (AXI4-Full) is required for full performance.
 - **Tokenizer**: Simple fallback (no BPE vocabulary loaded)
 - **TCP Stack**: Stub (needs LwIP integration)
 - **FPGA Synthesis**: Not yet run through Vivado
@@ -142,4 +144,4 @@ See [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
-This project was made possible by the foundational research of the binary neural network community. See [RESEARCH_BIBLIOGRAPHY.md](RESEARCH_BIBLIOGRAPHY.md) for the papers and resources that informed this work.
+This project was made possible by the foundational research of many intelligent individuals. See [RESEARCH_BIBLIOGRAPHY.md](RESEARCH_BIBLIOGRAPHY.md) for the papers and resources that informed this work.
