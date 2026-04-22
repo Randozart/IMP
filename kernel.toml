@@ -1,0 +1,36 @@
+# KV260 IMP Kernel Software Configuration
+# ARM Cortex-A53 bare-metal kernel
+# Addresses in 0x40000000 range (AXI4-Lite peripheral space)
+
+[project]
+name = "imp-kernel"
+version = "0.1.0"
+
+[target]
+fpga = "xczu4ev-sfvc784-1"
+clock_hz = 100_000_000
+
+[interface]
+name = "axi4-lite"
+address_width = 18
+data_width = 32
+
+[memory]
+# Hardware Interface (triggers from FPGA)
+"0x40000000" = { size = 1, type = "flipflop", element_bits = 8 }
+"0x40000004" = { size = 1, type = "flipflop", element_bits = 8 }
+"0x40000008" = { size = 1, type = "flipflop", element_bits = 4 }
+
+# Kernel State (internal, no MMIO)
+"0x00000000" = { size = 1, type = "flipflop", element_bits = 32 }
+"0x00000004" = { size = 1, type = "flipflop", element_bits = 32 }
+
+# Buffer Pointers (DDR4 addresses)
+"0x00000008" = { size = 1, type = "flipflop", element_bits = 32 }
+"0x0000000C" = { size = 1, type = "flipflop", element_bits = 32 }
+
+[io]
+# These would be actual FPGA-to-ARM signals
+"0x40000000" = { pin = "H5", direction = "output" }
+"0x40000004" = { pin = "J5", direction = "output" }
+"0x40000008" = { pin = "H6", direction = "output" }
