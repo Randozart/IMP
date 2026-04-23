@@ -19,15 +19,15 @@ data_width = 32
 [memory]
 # CPU Interface Registers (flipflop - small registers)
 # These are MMIO control registers between ARM and FPGA
-"0x4000A000" = { size = 1, type = "flipflop", element_bits = 8 }
-"0x4000A004" = { size = 1, type = "flipflop", element_bits = 8 }
-"0x4000A008" = { size = 1, type = "flipflop", element_bits = 4 }
-"0x4000A00C" = { size = 1, type = "flipflop", element_bits = 16 }
-"0x4000A040" = { size = 1, type = "flipflop", element_bits = 16 }
-"0x4000A044" = { size = 1, type = "flipflop", element_bits = 18 }
-"0x4000A048" = { size = 1, type = "flipflop", element_bits = 1 }
-"0x4000A04C" = { size = 1, type = "flipflop", element_bits = 1 }
-"0x4000A050" = { size = 1, type = "flipflop", element_bits = 16 }
+"0x8000A000" = { size = 1, type = "flipflop", element_bits = 8 }
+"0x8000A004" = { size = 1, type = "flipflop", element_bits = 8 }
+"0x8000A008" = { size = 1, type = "flipflop", element_bits = 4 }
+"0x8000A00C" = { size = 1, type = "flipflop", element_bits = 16 }
+"0x8000A040" = { size = 1, type = "flipflop", element_bits = 16 }
+"0x8000A044" = { size = 1, type = "flipflop", element_bits = 18 }
+"0x8000A048" = { size = 1, type = "flipflop", element_bits = 1 }
+"0x8000A04C" = { size = 1, type = "flipflop", element_bits = 1 }
+"0x8000A050" = { size = 1, type = "flipflop", element_bits = 16 }
 
 # BRAM: Single 512KB buffer for active layer computation
 # Weights are streamed from DDR4 (0x10000000+) via AXI, not stored in FPGA
@@ -39,9 +39,9 @@ data_width = 32
 "0x40B00000" = { size = 262144, type = "ultraram", element_bits = 16 }
 
 [io]
-"0x4000A000" = { pin = "H5", direction = "output" }
-"0x4000A004" = { pin = "J5", direction = "output" }
-"0x4000A008" = { pin = "H6", direction = "output" }
+"0x8000A000" = { pin = "H5", direction = "output" }
+"0x8000A004" = { pin = "J5", direction = "output" }
+"0x8000A008" = { pin = "H6", direction = "output" }
 
 # NOTE: Model weights (1.77GB for Qwen 9B) are stored in DDR4 at 0x10000000
 # They are NOT stored in FPGA BRAM - they are streamed as needed via AXI

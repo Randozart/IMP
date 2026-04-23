@@ -23,21 +23,22 @@ use core::sync::atomic::{AtomicBool, Ordering};
 // MMIO Hardware Interface
 // =============================================================================
 
-// Hardware memory-mapped registers at 0x4000A000 (FPGA AXI4-Lite slave)
-const MMIO_BASE: *mut State = 0x4000A000 as *mut State;
+// Hardware memory-mapped registers at 0x8000A000 (FPGA AXI4-Lite slave)
+
+const MMIO_BASE: *mut State = 0x8000A000 as *mut State;
 
 #[repr(C)]
 pub struct State {
-    pub control: u32,        // 0x4000A000 - Command to FPGA (mailbox)
-    pub status: u32,          // 0x4000A004 - FPGA status
-    pub opcode: u32,         // 0x4000A008 - Operation code
-    pub token_count: u32,    // 0x4000A00C - Token counter
-    _pad0: [u32; 12],        // Padding to 0x4000A040
-    pub write_data: i32,     // 0x4000A040 - Mailbox: data to write (triggers load_weights/load_input)
-    pub write_addr: u32,      // 0x4000A044 - Mailbox: address/index for writes
-    pub write_en: u32,       // 0x4000A048 - Mailbox: write enable pulse
-    pub read_en: u32,        // 0x4000A04C - Mailbox: read enable pulse
-    pub read_data: i32,      // 0x4000A050 - Mailbox: data read back from scratch
+    pub control: u32,        // 0x8000A000 - Command to FPGA (mailbox)
+    pub status: u32,          // 0x8000A004 - FPGA status
+    pub opcode: u32,         // 0x8000A008 - Operation code
+    pub token_count: u32,    // 0x8000A00C - Token counter
+    _pad0: [u32; 12],        // Padding to 0x8000A040
+    pub write_data: i32,     // 0x8000A040 - Mailbox: data to write (triggers load_weights/load_input)
+    pub write_addr: u32,      // 0x8000A044 - Mailbox: address/index for writes
+    pub write_en: u32,       // 0x8000A048 - Mailbox: write enable pulse
+    pub read_en: u32,        // 0x8000A04C - Mailbox: read enable pulse
+    pub read_data: i32,      // 0x8000A050 - Mailbox: data read back from scratch
 }
 
 impl State {

@@ -10,19 +10,18 @@
 // BRAM is 518KB total, UltraRAM is 2.25MB - we can only fit one layer at a time.
 
 // === CPU Interface (from ARM via AXI4-Lite) ===
-trg cpu_control: UInt @ 0x4000a000 /0..7;
-trg cpu_status: UInt @ 0x4000a004 /0..7;
-trg cpu_opcode: UInt @ 0x4000a008 /0..3;
-trg cpu_token_count: UInt @ 0x4000a00C /0..15;
-trg cpu_write_data: Int @ 0x4000a040 / x16;
-trg cpu_write_addr: UInt @ 0x4000a044 /0..17;
-trg cpu_write_en: Bool @ 0x4000a048;
-trg cpu_read_en: Bool @ 0x4000a04C;
+trg cpu_control: UInt @ 0x8000a000 /0..7;
+trg cpu_status: UInt @ 0x8000a004 /0..7;
+trg cpu_opcode: UInt @ 0x8000a008 /0..3;
+trg cpu_token_count: UInt @ 0x8000a00C /0..15;
+trg cpu_write_data: Int @ 0x8000a040 / x16;
+trg cpu_write_addr: UInt @ 0x8000a044 /0..17;
+trg cpu_write_en: Bool @ 0x8000a048;
+trg cpu_read_en: Bool @ 0x8000a04C;
 
-// === Internal Control Registers ===
-let control: UInt @ 0x4000a000 /0..7 = 0;
-let status: UInt @ 0x4000a004 /0..7 = 0;
-let opcode: UInt @ 0x4000a008 /0..3 = 0;
+let control: UInt @ 0x8000a000 /0..7 = 0;
+let status: UInt @ 0x8000a004 /0..7 = 0;
+let opcode: UInt @ 0x8000a008 /0..3 = 0;
 
 // === FSM State Machine ===
 let calc_index: UInt = 0;
@@ -133,7 +132,7 @@ rct txn forward_complete [status == 5] [status == 2] {
 };
 
 // === Read Result (ARM reads from scratch buffer) ===
-let read_data: Int @ 0x4000A050 / x16 = 0;
+let read_data: Int @ 0x8000A050 / x16 = 0;
 
 rct txn read_result [cpu_read_en && control == 25][read_data == scratch[cpu_write_addr]] {
     &read_data = scratch[cpu_write_addr];

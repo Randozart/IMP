@@ -8,7 +8,7 @@
 MEMORY
 {
     /* DDR4 Memory - 2GB starting at 0x00000000 */
-    /* Note: 0x4000A000 is FPGA MMIO, NOT a code storage address */
+    /* Note: 0x8000A000 is FPGA MMIO, NOT a code storage address */
     DDR4 (rwx) : ORIGIN = 0x00000000, LENGTH = 0x80000000
 
     /* FPGA BRAM - 518KB at 0x40A80000 */
