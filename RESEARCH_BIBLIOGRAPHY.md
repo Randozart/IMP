@@ -64,21 +64,17 @@ For LLM-assisted development or verification, this file provides the necessary c
 ## IV. Edge FPGA Implementation & Co-Design
 *The systems-engineering principles confirming that bare-metal execution on the Zynq UltraScale+ architecture is the optimal path for inference.*
 
-### 8. PD-Swap
-**PD-Swap: Prefill–Decode Logic Swapping for End-to-End LLM Inference on Edge FPGAs via Dynamic Partial Reconfiguration**
-*   **Authors:** Yifan Zhang, Zhiheng Chen, Ye Qiao, Sitao Huang (UC Irvine)
-*   **Published:** December 12, 2025
-*   **arXiv ID:** `2512.11550`
-*   **Link:**[https://arxiv.org/abs/2512.11550](https://arxiv.org/abs/2512.11550)
-*   **Relevance to IMP:** This paper explicitly explores the "prefill-decode asymmetry." It validates the strategy of separating the compute-heavy prefill (matrix operations) from the bandwidth-heavy decoding (KV-cache traffic), and outlines how Dynamic Partial Reconfiguration (DPR) on edge FPGAs can prevent the quadratic cost of sequence lengths from crippling the 19.2 GB/s DDR4 limit.
+8. **PD-Swap: Prefill–Decode Logic Swapping for End-to-End LLM Inference on Edge FPGAs via Dynamic Partial Reconfiguration**
+    * *Authors:* Yifan Zhang, Zhiheng Chen, Ye Qiao, Sitao Huang (UC Irvine)
+    * *Published:* December 12, 2025
+    * *Link:* [arXiv:2512.11550](https://arxiv.org/abs/2512.11550)
+    * *Relevance to IMP:* This paper explicitly explores the "prefill-decode asymmetry." It validates the strategy of separating compute-heavy prefill (matrix operations) from bandwidth-heavy decoding (KV-cache traffic), and outlines how Dynamic Partial Reconfiguration (DPR) on edge FPGAs can prevent the quadratic cost of sequence lengths from crippling the 19.2 GB/s DDR4 limit.
 
-### 9. TENET
-**TENET: An Efficient Sparsity-Aware LUT-Centric Architecture for Ternary LLM Inference On Edge**
-*   **Authors:** Zhirui Huang, Rui Ma, Shijie Cao, et al.
-*   **Published:** September 17, 2025
-*   **arXiv ID:** `2509.13765`
-*   **Link:**[https://arxiv.org/abs/2509.13765](https://arxiv.org/abs/2509.13765)
-*   **Relevance to IMP:** It introduces the "Sparse Ternary LUT (STL) Core," proving that mapping `-1, 0, 1` weights directly to Lookup Tables (LUTs) rather than DSPs or add-only trees cuts power consumption by nearly 46% and area by 52%. It mathematically grounds the Brief compiler's approach to translating ternary operations into combinational logic.
+9. **TENET: An Efficient Sparsity-Aware LUT-Centric Architecture for Ternary LLM Inference On Edge**
+    * *Authors:* Zhirui Huang, Rui Ma, Shijie Cao, et al.
+    * *Published:* September 17, 2025
+    * *Link:* [arXiv:2509.13765](https://arxiv.org/abs/2509.13765)
+    * *Relevance to IMP:* It introduces the "Sparse Ternary LUT (STL) Core," proving that mapping `{-1, 0, 1}` weights directly to Lookup Tables (LUTs) rather than DSPs or add-only trees cuts power consumption by nearly 46% and area by 52%. It mathematically grounds the Brief compiler's approach to translating ternary operations into combinational logic.
 
 ---
 *Generated for IMP v0.1 — April 2026*
