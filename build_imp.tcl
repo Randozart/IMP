@@ -13,7 +13,9 @@
 # CONFIGURATION
 # ============================================================
 set project_name "imp_kv260"
-set part_number "xczu4ev-sfvc784-1"
+# KV260 uses Zynq UltraScale+ XCZU4EV - use full part number
+# Common options: xczu4ev-sfvc784-1, xczu4ev-sfvc784-1-e, xczu4ev-sfvc784-1-i
+set part_number "XCZU4EV-SFVC784-1"
 set top_module "neuralcore"
 set sv_file "generated/neuralcore.sv"
 
