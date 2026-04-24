@@ -10,3 +10,30 @@ neuralcore_sim
 # Generated SystemVerilog (should be in generated/ not root)
 neuralcore.sv
 neuralcore_tb.sv
+
+# Vivado project files
+*.xpr
+*.log
+*.jou
+*.jou.*
+*.backup.*
+vivado*.log
+imp_kv260.cache/
+imp_kv260.gen/
+imp_kv260.hw/
+imp_kv260.ip_user_files/
+imp_kv260.runs/
+imp_kv260.srcs/
+ip_packager_proj/
+ip_repo/
+
+# Boot build directory (rebuilt on target machine)
+boot/fsbl/
+boot/*.o
+boot/*.elf
+boot/*.bit
+boot/BOOT.BIN
+boot/fsbl.elf
+
+# Brief compiler build artifacts
+brief-compiler/target/
