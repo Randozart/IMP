@@ -12,12 +12,13 @@
 # ============================================================
 # CONFIGURATION
 # ============================================================
-set project_name "imp_kv260"
-# KV260 uses Zynq UltraScale+ XCZU4EV - use full part number
-# Common options: xczu4ev-sfvc784-1, xczu4ev-sfvc784-1-e, xczu4ev-sfvc784-1-i
-set part_number "XCZU4EV-SFVC784-1"
-set top_module "neuralcore"
-set sv_file "generated/neuralcore.sv"
+# KV260 KV260 part number: xck26-sfvc784-2LV-c
+# This is the actual chip on the KV260 Vision AI Starter Kit
+set part_number "xck26-sfvc784-2LV-c"
+# Alternative part numbers that may work if above doesn't:
+# - xczu4ev-sfvc784-1 (older stand-in, requires full Vivado install)
+# - xczu4ev-sfvc784-1-e (commercial temp grade)
+# - xczu4ev-sfvc784-1-i (industrial temp grade)
 
 # ============================================================
 # PROJECT SETUP
@@ -77,12 +78,21 @@ create_bd_pin -dir I -type rst zynq_ps_rst0
 connect_bd_net [get_bd_pins zynq_ps/aux_resetn] [get_bd_pins neuralcore_0/rst_n]
 
 # ============================================================
-# CONNECT AXI INTERFACE
+# AXI CONNECTION
 # ============================================================
 puts "Connecting AXI interface..."
 
-# Connect neuralcore S_AXI to Zynq M_AXI_HPM0_LPD
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Master "/zynq_ps/M_AXI_HPM0_LPD" } [get_bd_intf_pins neuralcore_0/S_AXI]
+# KV260 uses M_AXI_GP0 or M_AXI_HPM0_LPD depending on Vivado version
+# Try HPM0_LPD first (newer Vivado), fall back to GP0
+setaxi_port "M_AXI_HPM0_LPD"
+
+if {[catch {apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config [list Master $setaxi_port] [get_bd_intf_pins neuralcore_0/S_AXI]} err]} {
+    puts "First AXI port failed ($err), trying GP0..."
+    setaxi_port "M_AXI_GP0"
+    apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config [list Master $setaxi_port] [get_bd_intf_pins neuralcore_0/S_AXI]
+}
+
+puts "Connected to $setaxi_port"
 
 # ============================================================
 # ASSIGN ADDRESSES (CRITICAL)
