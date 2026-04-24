@@ -37,3 +37,9 @@ boot/fsbl.elf
 
 # Brief compiler build artifacts
 brief-compiler/target/
+
+# Large model files (too big for git)
+weights/
+weights/*.safetensors
+weights/*.bin
+weights/*.json
