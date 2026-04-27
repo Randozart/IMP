@@ -1,0 +1,22 @@
+[package]
+name = "imp-kernel"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib"]
+name = "imp_kernel"
+
+[dependencies]
+
+[target.aarch64-none-elf]
+linker = "aarch64-linux-gnu-gcc"
+rustflags = [
+    "-C", "link-arg=-Tmemory.ld",
+    "-C", "link-arg=-nostdlib",
+    "-C", "link-arg=-no-pie",
+]
+
+[profile.release]
+opt-level = "s"
+lto = true

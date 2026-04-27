@@ -2,25 +2,24 @@
 
 ![IMP Logo](Imp.svg)
 
-## ⚠️ DEVELOPMENT STATUS - UNTESTED ON PHYSICAL HARDWARE ⚠️
+## Status: PetaLinux Transition Complete ⚠️
 
-This project is in active development. The system has been:
-- ✅ Designed with correct KV260 memory constraints (single 512KB BRAM buffer)
-- ✅ Compiled through brief-compiler to valid SystemVerilog
-- ✅ Verified with Verilator lint and simulation
-- ❌ **NOT YET tested on actual KV260 hardware**
+The bare-metal approach has been **abandoned** in favor of PetaLinux. See [BAREMETAL_FAILURES.md](BAREMETAL_FAILURES.md) for the complete story of what went wrong.
 
-**Do not deploy to production hardware without physical validation.**
+**Current Status:**
+- ✅ FPGA bitstream built (`system_wrapper.bit`)
+- ✅ PetaLinux setup documented
+- ✅ SD card deployment scripts prepared
+- ❌ **PetaLinux not yet installed on build PC**
+- ❌ **Not yet tested on hardware**
 
 ---
 
 ## The IMP Project
 
-The IMP project is a response to the current status quo of AI into subscription-based cloud services. I created a custom language called Brief which allowed me to write the same syntax for both hardware and software, and I realised I could map neural network operations directly to FPGA gate logic. By combining 1.58-bit ternary quantization with Gated Delta Networks, the system enables a 9B parameter model to run on a standard $250 Kria KV260 board. Executing bare-metal on the ARM processor removes the overhead of a traditional operating system, maximizing memory availability and reducing the 19.2 GB/s bandwidth bottleneck.
+The IMP project aims to run a 9B parameter neural network on a standard $250 KV260 board using ternary (1.58-bit) quantization and Gated Delta Networks. The system uses the FPGA for inference acceleration while an ARM processor manages loading, preprocessing, and orchestration.
 
-I am open-sourcing the IMP engine and the Brief compiler under the GPLv2 license to ensure the logic remains a public, reciprocal resource. This architecture significantly lowers the environmental footprint of AI by replacing data-center power requirements with efficient, edge-native silicon logic. The goal is to provide individuals with the hardware design tools and model access usually reserved for large corporations. By moving AI from a rented service to locally-owned hardware, we ensure that the ability to process and generate information remains a permanent utility under the user's direct control.
-
-I am currently actively developing this project, and current known limitations will likely be solved in the near future.
+Originally designed for bare-metal execution to maximize performance, the project has transitioned to PetaLinux due to persistent memory management issues.
 
 ---
 
@@ -28,61 +27,163 @@ I am currently actively developing this project, and current known limitations w
 
 ```
                     ┌─────────────────┐
-                    │  ARM Cortex-A53 │
-                    │  (Brief Kernel) │
+                    │   PetaLinux      │
+                    │   (ARM A53)      │
                     └────────┬────────┘
-                             │ AXI4-Lite MMIO
+                             │ /dev/uio0, /dev/mem
                              ▼
                     ┌─────────────────┐
                     │  FPGA Neural    │
                     │  Core Engine    │
-                    │  (SystemVerilog)│
+                    │  (AXI4-Lite)    │
                     └────────┬────────┘
                              │
                     ┌────────▼────────┐
                     │     DDR4        │
-                    │  (Model Weights) │
+                    │  (Model Weights)│
                     └─────────────────┘
 ```
 
 **Key Features:**
 - Ternary computation (-1, 0, +1) for 1.58-bit quantization
-- Single 512KB BRAM buffer streamed from DDR4
-- Bare-metal ARM execution (no OS overhead)
-- Brief language compiles to both ARM and FPGA
+- FPGA for high-throughput inference
+- Linux-based host for reliable model loading
+- Brief language for neural network specification
 
 ---
 
-## Quick Start
+## Quick Start (PetaLinux)
 
 ### Prerequisites
-- KV260 board
-- Rust toolchain for ARM (`thumbv7neon-none-eabihf`)
-- Xilinx Vivado (for FPGA synthesis)
-- Verilator (for simulation)
+- KV260 Vision AI Starter Kit
+- SD card (16GB+)
+- Xilinx Vivado + PetaLinux 2023.2
+- USB-UART cable for serial console
 
-### Build & Simulate
+### Build & Deploy
+
 ```bash
-# Generate hardware from Brief specification
-./brief-compiler verilog neuralcore.ebv --hw hardware.toml -o generated/
+# 1. Install PetaLinux tools
+source ~/petalinux/settings.sh
 
-# Run Verilator simulation
-./run_sim.sh
+# 2. Create project from BSP
+petalinux-create -t project -s xilinx-kr260-starterboard-2023.2.bsp
 
-# View waveforms
-gtkwave sim_build/waveform.vcd
+# 3. Build
+cd imp-platform
+petalinux-build
+
+# 4. Package for SD
+petalinux-package --boot \
+    --fsbl images/linux/zynqmp_fsbl.elf \
+    --u-boot images/linux/u-boot.elf \
+    --atf images/linux/bl31.elf \
+    --kernel images/linux/image.ub \
+    -o images/linux/BOOT.BIN
+
+# 5. Flash to SD card (see PETA_LINUX_SETUP.md for full instructions)
 ```
 
-### Deploy to SD Card
+### First Boot
+
 ```bash
-./build_sdcard.sh /path/to/sdcard
+# Serial console
+screen /dev/ttyUSB1 115200
+
+# Login: root / root
+
+# Load FPGA
+cat neuralcore.bit > /dev/fpga0
+
+# Load model
+cp model_9b.isp /var/models/
+
+# Run inference
+imp-inference "Hello, world"
 ```
+
+---
+
+## Documentation
+
+| Document | Purpose |
+|----------|---------|
+| **[PETA_LINUX_DOWNLOADS.md](PETA_LINUX_DOWNLOADS.md)** | Download links & account setup |
+| **[PETA_LINUX_SETUP.md](PETA_LINUX_SETUP.md)** | Complete PetaLinux setup guide |
+| **[IMP_QUICK_START.md](IMP_QUICK_START.md)** | Detailed quick start |
+| **[IMP_QUICK_CARD.md](IMP_QUICK_CARD.md)** | One-page reference card |
+| **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** | Step-by-step deployment |
+| **[BAREMETAL_FAILURES.md](BAREMETAL_FAILURES.md)** | Why bare-metal failed |
+| **[SPEC_v0.1.md](SPEC_v0.1.md)** | Full architecture specification |
+| **[INFERENCE_GUIDE.md](INFERENCE_GUIDE.md)** | Usage and protocol |
+
+---
+
+## Memory Map (KV260 DDR4)
+
+| Region | Address | Size | Usage |
+|--------|---------|------|-------|
+| Linux RAM | 0x00000000 | 2GB | Kernel + userspace |
+| FPGA Space | 0x80000000 | 2GB | FPGA + reserved |
+| FPGA MMIO | 0x8000A000 | 4KB | Register access |
+| FPGA BRAM | 0x88000000 | 512MB | On-chip memory |
+
+---
+
+## Project Structure
+
+```
+imp/
+├── PETA_LINUX_SETUP.md     # PetaLinux guide (NEW)
+├── IMP_QUICK_START.md      # Detailed quick start (NEW)
+├── IMP_QUICK_CARD.md       # One-page reference (NEW)
+├── BAREMETAL_FAILURES.md   # Bare-metal postmortem (NEW)
+├── arm/
+│   ├── kernel.c           # Bare-metal kernel (archived)
+│   ├── linker.ld          # Linker script
+│   └── kernel.bin         # Raw binary (unused)
+├── boot/
+│   ├── BOOT.BIN           # FSBL + bitstream
+│   ├── system_wrapper.bit # FPGA bitstream
+│   └── boot.cmd           # U-Boot script
+├── brief-compiler/         # Brief language compiler
+├── generated/             # Compiled SystemVerilog
+├── scripts/
+│   ├── create_sd_card.sh  # SD card prep script
+│   └── build_and_deploy.sh # Build & deploy script
+└── weights/
+    ├── model_9b.isp       # 9B model weights (2.2GB)
+    └── feeder.isp          # 0.5B feeder weights (867MB)
+```
+
+---
+
+## Bare-Metal to PetaLinux Transition
+
+### Why We Switched
+
+| Issue | Bare-Metal | PetaLinux |
+|-------|-----------|-----------|
+| Model loading (2.2GB) | Blocked by U-Boot | `cat model.bin > /dev/...` |
+| Boot reliability | Manual commands each time | Automatic on power-on |
+| SD card access | Custom driver required | Built-in |
+| Memory management | Manual, error-prone | Handled by kernel |
+| Development speed | Slow (memory debugging) | Fast (standard tools) |
+
+### Bare-Metal Postmortem Summary
+
+1. **ELF vs Raw Binary**: `bootelf` parsed ELF header as instructions → Fixed by `objcopy`
+2. **Memory Collision**: Kernel at 0x0 overwrote U-Boot → Fixed by using 0x20000000
+3. **Model Loading**: U-Boot reservations blocked 2.2GB file at multiple addresses → **UNFIXABLE** without redesign
+4. **Boot Mode**: KV260 boots from QSPI by default, no auto-execute from SD → Manual boot required
+
+**See [BAREMETAL_FAILURES.md](BAREMETAL_FAILURES.md) for full details.**
 
 ---
 
 ## Research Foundations
 
-This project builds on established research in binary neural networks and edge AI acceleration:
+This project builds on established research:
 
 - **Ternary Quantization**: {-1, 0, +1} weights enabling 1.58-bit per parameter
 - **Binary Neural Networks (XNOR-Net)**: Courbariaux et al., 2016
@@ -93,44 +194,15 @@ See [RESEARCH_BIBLIOGRAPHY.md](RESEARCH_BIBLIOGRAPHY.md) for full citation list.
 
 ---
 
-## Project Structure
+## Next Steps
 
-```
-imp/
-├── neuralcore.ebv       # FPGA neural engine (Brief)
-├── kernel.ebv           # ARM kernel specification (Brief)
-├── hardware.toml        # KV260 memory map & constraints
-├── arm/
-│   ├── kernel.rs        # ARM bare-metal implementation
-│   └── memory.ld        # Linker script (DDR4 at 0x0)
-├── generated/           # Compiled SystemVerilog
-├── run_sim.sh           # Verilator simulation
-├── build_sdcard.sh      # SD card builder
-├── SPEC_v0.1.md         # Full architecture specification
-└── Imp.svg              # Project logo
-```
-
----
-
-## Documentation
-
-| Document | Purpose |
-|----------|---------|
-| [SPEC_v0.1.md](SPEC_v0.1.md) | Full architecture specification |
-| [INFERENCE_GUIDE.md](INFERENCE_GUIDE.md) | Usage and TCP protocol |
-| [Build_Workflow.md](Build_Workflow.md) | Build pipeline |
-| [FLASH_GUIDE.md](FLASH_GUIDE.md) | SD card deployment |
-| [Hardware_Config_Guide.md](Hardware_Config_Guide.md) | hardware.toml reference |
-
----
-
-## Known Limitations
-
-- **DMA Transfer**: Weights currently stream via AXI4-Lite MMIO (CPU bound). High-speed AXI-DMA (AXI4-Full) is required for full performance.
-- **Tokenizer**: Simple fallback (no BPE vocabulary loaded)
-- **TCP Stack**: Stub (needs LwIP integration)
-- **FPGA Synthesis**: Not yet run through Vivado
-- **Physical Testing**: No hardware validation performed
+1. **Install PetaLinux tools** on development PC
+2. **Download KV260 BSP** from Xilinx
+3. **Build PetaLinux project** (~2 hours)
+4. **Flash SD card** with prepared scripts
+5. **Boot KV260** and verify
+6. **Load FPGA bitstream** and test
+7. **Run first inference** on hardware
 
 ---
 

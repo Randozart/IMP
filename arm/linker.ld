@@ -1,37 +1,29 @@
-/* IMP Kernel Linker Script for KV260
- * Loads at 0x00120000 where U-Boot expects kernel
+/* IMP Kernel Linker Script for KV260 (Zynq UltraScale+)
+ * Binary starts at 0x00080000 with _start as entry point
+ *
+ * COMPILE:
+ *   aarch64-linux-gnu-gcc -nostdlib -march=armv8-a -mlittle-endian \
+ *       -ffreestanding -O2 -T arm/linker.ld -o kernel.elf kernel.c
+ *   aarch64-linux-gnu-objcopy -O binary kernel.elf kernel.bin
  */
 
-MEMORY
-{
-    /* Code - 128KB from 0x00120000 */
-    RAM (rwx) : ORIGIN = 0x00120000, LENGTH = 0x20000
-    
-    /* Stack - below code */
-    STACK : ORIGIN = 0x00140000, LENGTH = 0x1000
-}
+OUTPUT_FORMAT("binary")
 
 ENTRY(_start)
 
 SECTIONS
 {
+    . = 0x00080000;
+
     .text : {
-        *(.text.start)
+        *(.text.start)       /* _start FIRST */
         *(.text)
         *(.rodata)
-    } > RAM
-
-    .data : {
-        *(.data)
-    } > RAM
+    }
 
     .bss : {
         __bss_start = .;
         *(.bss)
         __bss_end = .;
-    } > RAM
-
-    .stack : {
-        *(.stack)
-    } > STACK
+    }
 }

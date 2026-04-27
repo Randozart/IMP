@@ -1,0 +1,9 @@
+the_ROM_image:
+{
+	[bootloader]zynqmp_fsbl.elf
+	pmufw.elf
+	[destination_device=pl]system_wrapper.bit
+	bl31.elf
+	system-zynqmp-sck-kv-g-revB.dtb
+	u-boot.elf
+}
