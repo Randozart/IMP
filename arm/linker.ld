@@ -1,5 +1,6 @@
 /* IMP Kernel Linker Script for KV260 (Zynq UltraScale+)
- * Binary starts at 0x00080000 with _start as entry point
+ * Binary starts at 0x00100000 with _start as entry point
+ * Note: 0x00100000 chosen to avoid overlap with Model Part A
  *
  * COMPILE:
  *   aarch64-linux-gnu-gcc -nostdlib -march=armv8-a -mlittle-endian \
@@ -13,7 +14,7 @@ ENTRY(_start)
 
 SECTIONS
 {
-    . = 0x00080000;
+    . = 0x00100000;
 
     .text : {
         *(.text.start)       /* _start FIRST */

@@ -1,17 +1,21 @@
 // IMP Kernel Specification - ARM software layer state machine
 //     Copyright (C) 2026 Randy Smits-Schreuder Goedheijt
 //
-// kernel.ebv - IMP Bare-Metal Kernel (Software Layer)
+// kernel.ebv v1.5 - IMP Bare-Metal Kernel (Software Layer)
 // Runs on ARM Cortex-A53 Processing System
+//
+// Hardware registers use @ link to reference linkage.toml mappings
+// Internal state uses normal let declarations
 
-// === Hardware Interface (AXI4-Lite) - Triggers from hardware ===
-trg hw_control: UInt @ 0x40000000 /0..7;
-trg hw_status: UInt @ 0x40000004 /0..7;
-trg hw_opcode: UInt @ 0x40000008 /0..3;
+// === Hardware Interface (from FPGA via AXI4-Lite) ===
+// These use @ link - addresses resolved via linkage.toml
+trg hw_control: UInt @ link hw_control;
+trg hw_status: UInt @ link hw_status;
+trg hw_opcode: UInt @ link hw_opcode;
 
-// === Internal State ===
-let control: UInt @ 0x40000000 /0..7 = 0;
-let status: UInt @ 0x40000004 /0..7 = 0;
+// === Internal State (software-only, not hardware) ===
+let control: UInt = 0;
+let status: UInt = 0;
 let opcode: UInt = 0;
 
 // === Model State ===
@@ -19,78 +23,32 @@ let token_count: UInt = 0;
 let modelLoaded: Bool = false;
 let kernel_state: UInt = 0;
 
-// === Buffer Pointers (DDR4 addresses for DMA) ===
-let input_ptr: UInt = 0x40002000;
-let output_ptr: UInt = 0x40002100;
-
-// === Interface Sync Transaction ===
-rct txn sync_hw [hw_control != control] [control == hw_control] {
-    &control = hw_control;
-    &opcode = hw_opcode;
+// === Cache Coherency Transaction ===
+// ARM DC CIVAC to clean/invalidate cache before DMA reads
+rct txn flush_cache [true] [true] {
+    asm "dsb sy" {};
     term;
 };
 
-// === Load Input Transaction ===
-// input_ptr stores the address where input data should be read from DDR4
-rct txn load_input [control == 1 && input_ptr == 0][status == 1] {
-    &input_ptr = 0x40002000;
-    &status = 2;
-    term;
-};
-
-rct txn confirm_input_loaded [control == 1 && input_ptr != 0][status == 2] {
-    &status = 2;
-    term;
-};
-
-// === Execute Transaction ===
-rct txn execute [control == 2 && opcode == 1][status == 2] {
-    &status = 3;
-    term;
-};
-
-// === Read Output Transaction ===
-// output_ptr stores the address where output should be written
-rct txn prepare_output [control == 3 && token_count > 0][status == 3] {
-    &output_ptr = 0x40002100;
-    &token_count = token_count - 1;
-    term;
-};
-
-rct txn read_output [control == 3 && output_ptr != 0][status == 4] {
-    &status = 4;
-    term;
-};
-
-// === Model Management ===
-rct txn init_model [modelLoaded == false][modelLoaded == true] {
+// === Model Loading Transaction ===
+rct txn load_model [modelLoaded == false] [modelLoaded == true] {
     &modelLoaded = true;
     &kernel_state = 1;
     term;
 };
 
-rct txn idle [kernel_state >= 0][kernel_state == 0] {
+// === Main State Machine ===
+rct txn idle [kernel_state == 0] [kernel_state == 0] {
     &kernel_state = 0;
     term;
 };
 
-// === Main State Machine ===
-rct txn check_prompt [kernel_state == 1 && modelLoaded == true][token_count > 0] {
+rct txn ready [kernel_state == 1 && modelLoaded == true] [kernel_state == 2] {
     &kernel_state = 2;
     term;
 };
 
-rct txn send_to_hardware [kernel_state == 2][control == 1] {
-    &kernel_state = 3;
-    term;
-};
-
-rct txn wait_execute [kernel_state == 3 && status == 4][kernel_state == 4] {
-    &kernel_state = 4;
-    term;
-};
-
-rct txn fetch_results [kernel_state == 4][control == 3] {
-    &kernel_state = 0;
+rct txn waiting [kernel_state == 2] [kernel_state == 2] {
+    &kernel_state = 2;
     term;
 };

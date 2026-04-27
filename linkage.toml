@@ -1,0 +1,26 @@
+# IMP v1.5 Linkage Configuration
+# Maps Brief @ link names to actual addresses/signals per target
+
+[links]
+
+# FPGA MMIO (AXI4-Lite from ARM perspective)
+hw_control = { sv = "hw_control_reg", rust = "0x8000A000", c = "0x8000A000" }
+hw_status = { sv = "hw_status_reg", rust = "0x8000A004", c = "0x8000A004" }
+hw_opcode = { sv = "hw_opcode_reg", rust = "0x8000A008", c = "0x8000A008" }
+cpu_control = { sv = "cpu_control_reg", rust = "0x8000A000", c = "0x8000A000" }
+cpu_status = { sv = "cpu_status_reg", rust = "0x8000A004", c = "0x8000A004" }
+cpu_opcode = { sv = "cpu_opcode_reg", rust = "0x8000A008", c = "0x8000A008" }
+cpu_write_data = { sv = "cpu_write_data_reg", rust = "0x8000A040", c = "0x8000A040" }
+cpu_write_addr = { sv = "cpu_write_addr_reg", rust = "0x8000A044", c = "0x8000A044" }
+cpu_write_en = { sv = "cpu_write_en_reg", rust = "0x8000A048", c = "0x8000A048" }
+cpu_read_en = { sv = "cpu_read_en_reg", rust = "0x8000A04C", c = "0x8000A04C" }
+
+# BRAM Addresses (FPGA fabric)
+weight_buffer = { sv = "weight_bram", rust = "0x40A80000", c = "0x40A80000" }
+scratch = { sv = "scratch_bram", rust = "0x40B00000", c = "0x40B00000" }
+
+# DDR4 Memory Regions
+model_a_base = { sv = "unused", rust = "0x00000000", c = "0x00000000" }
+model_b_base = { sv = "unused", rust = "0x800000000", c = "0x800000000" }
+cache_a_base = { sv = "unused", rust = "0x46800000", c = "0x46800000" }
+cache_b_base = { sv = "unused", rust = "0x86C000000", c = "0x86C000000" }
