@@ -1,6 +1,6 @@
 # IMP - Inference Machine Pipeline
 
-![IMP Logo](Imp.svg)
+<img src="Imp.svg" alt="IMP Logo" width="200"/>
 
 ## Status: PetaLinux Transition Complete ⚠️
 
